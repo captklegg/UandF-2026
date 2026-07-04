@@ -108,36 +108,15 @@
 								<hr>
 								<h3 class="blood">A cult classic since 2008</h3>
 
-								<div class="slideshow-container">
-									<div class="mySlides fadeinout">
-									  <img src="https://underwoodandflinch.com/images/covers/UnderwoodandFlinch-slide.webp" style="width:100%">
-									</div>
-									
-									<div class="mySlides fadeinout">
-									  <img src="https://underwoodandflinch.com/images/covers/underground-slide.webp" style="width:100%">
+								<div id="hcg-slider-1" class="hcg-slider">
+									<div class="hcg-slide-container">
+										<div class="hcg-slider-track"></div>
+
+										<a href="#" id="hcg-slide-prev">❮</a>
+										<a href="#" id="hcg-slide-next">❯</a>
 									</div>
 
-									<div class="mySlides fadeinout">
-									  <img src="https://underwoodandflinch.com/images/covers/blood-and-smoke-slide.webp" style="width:100%">
-									</div>
-
-									<div class="mySlides fadeinout">
-									  <img src="https://underwoodandflinch.com/images/covers/in-tenebris-slide.webp" style="width:100%">
-									</div>
-									
-									<div class="mySlides fadeinout">
-									  <img src="https://underwoodandflinch.com/images/covers/claverton-slide.webp" style="width:100%">
-									</div>
-
-								</div>
-								<br>
-
-								<div style="text-align:center">
-								  <span class="dot"></span> 
-								  <span class="dot"></span> 
-								  <span class="dot"></span> 
-								  <span class="dot"></span>
-								  <span class="dot"></span>								  
+									<div class="hcg-slide-dot-control"></div>
 								</div>								
 
 								<blockquote class="blood">“Bennett’s ‘Underwood and Flinch’ saga is the best hidden literary gem in existence. Experience the same thrill you have when you find an unsigned underground band that blows your mind.”</blockquote>
@@ -353,27 +332,133 @@
 			<script src="assets/js/main.js"></script>
 			<script async src="https://widget.spreaker.com/widgets.js"></script>
 			
+			<!-- Slideshow -->
 			<script>
-				let slideIndex = 0;
-				showSlides();
+			const imagesList = [
+				{"src":"https://underwoodandflinch.com/images/covers/UnderwoodandFlinch-slide.webp","link":"","alt":"","name":"image 1"},
+				{"src":"https://underwoodandflinch.com/images/covers/underground-slide.webp","link":"","alt":"","name":"image 2"},
+				{"src":"https://underwoodandflinch.com/images/covers/blood-and-smoke-slide.webp","link":"","alt":"","name":"image 3"},
+				{"src":"https://underwoodandflinch.com/images/covers/in-tenebris-slide.webp","link":"","alt":"","name":"image 4"},
+				{"src":"https://underwoodandflinch.com/images/covers/claverton-slide.webp","link":"","alt":"","name":"image 5"}
+			];
 
-				function showSlides() {
-				  let i;
-				  let slides = document.getElementsByClassName("mySlides");
-				  let dots = document.getElementsByClassName("dot");
-				  for (i = 0; i < slides.length; i++) {
-					slides[i].style.display = "none";  
-				  }
-				  slideIndex++;
-				  if (slideIndex > slides.length) {slideIndex = 1}    
-				  for (i = 0; i < dots.length; i++) {
-					dots[i].className = dots[i].className.replace(" active", "");
-				  }
-				  slides[slideIndex-1].style.display = "block";  
-				  dots[slideIndex-1].className += " active";
-				  setTimeout(showSlides, 4000); // Change image every 4 seconds
+			function simpleSlider(selector, imagesList, options = {}) {
+				const slider = typeof selector === "string"
+					? document.querySelector(selector)
+					: selector;
+
+				if (!slider || !Array.isArray(imagesList) || imagesList.length === 0) {
+					console.warn("simpleSlider: Invalid slider element or empty images list.");
+					return null;
 				}
-			</script>
+
+
+				const {
+					startIndex = 0,
+					animationClass = "animated",
+
+					// Auto play options
+					autoplay = false,
+					autoplayDelay = 3000,
+					pauseOnHover = true
+				} = options;
+
+				const track = slider.querySelector(".hcg-slider-track");
+				const dotsContainer = slider.querySelector(".hcg-slide-dot-control");
+				const prevBtn = slider.querySelector("#hcg-slide-prev");
+				const nextBtn = slider.querySelector("#hcg-slide-next");
+
+				let index = startIndex;
+				const total = imagesList.length;
+				let autoplayTimer = null;
+
+				//  Build Slides
+				track.innerHTML = imagesList.map((img, i) => `
+				<a ${img.link ? `href="${img.link}" target="_blank"` : ""} class="hcg-slides ${animationClass}">
+				  <img src="${img.src}" alt="${img.alt || ""}">
+				</a>
+				`).join("");
+
+				dotsContainer.innerHTML = imagesList.map((_, i) => `
+				<a href="#" class="hcg-slide-dot" data-id="${i}"></a>
+				`).join("");
+
+				const slides = slider.querySelectorAll(".hcg-slides");
+				const dots = slider.querySelectorAll(".hcg-slide-dot");
+
+				//  Core Logic
+				const showSlide = (i) => {
+					index = (i + total) % total;
+
+					slides.forEach((slide, idx) => {
+						slide.style.display = idx === index ? "flex" : "none";
+						dots[idx].classList.toggle("dot-active", idx === index);
+					});
+				};
+
+				// Auto Play
+				const startAutoplay = () => {
+					if (!autoplay || autoplayTimer) return;
+					autoplayTimer = setInterval(() => {
+						showSlide(index + 1);
+					}, autoplayDelay);
+				};
+
+				const stopAutoplay = () => {
+					clearInterval(autoplayTimer);
+					autoplayTimer = null;
+				};
+
+
+				// Controls
+				prevBtn.addEventListener("click", e => {
+					e.preventDefault();
+					showSlide(index - 1);
+				});
+
+				nextBtn.addEventListener("click", e => {
+					e.preventDefault();
+					showSlide(index + 1);
+				});
+
+				dotsContainer.addEventListener("click", e => {
+					const dot = e.target.closest(".hcg-slide-dot");
+					if (!dot) return;
+					e.preventDefault();
+					showSlide(+dot.dataset.id);
+				});
+
+				if (pauseOnHover && autoplay) {
+					slider.addEventListener("mouseenter", stopAutoplay);
+					slider.addEventListener("mouseleave", startAutoplay);
+				}
+
+
+				// Init
+				showSlide(index);
+				startAutoplay();
+
+				// Public API
+				return {
+					next: () => showSlide(index + 1),
+					prev: () => showSlide(index - 1),
+					goTo: i => showSlide(i),
+					play: startAutoplay,
+					pause: stopAutoplay,
+					getIndex: () => index
+				};
+			}
+
+
+
+
+			// Usage
+			const slider = simpleSlider("#hcg-slider-1", imagesList, {
+				autoplay: true,
+				autoplayDelay: 3000,
+				pauseOnHover: true
+			});
+		</script>
 
 	</body>
 </html>
