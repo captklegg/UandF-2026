@@ -4950,6 +4950,7 @@ section.main {
 
 		/* Individual FAQ item */
 		.faq-item {
+		  background: white;
 		  border: 1px solid #E5E7EB;
 		  border-radius: 8px;
 		  margin-bottom: 12px;
